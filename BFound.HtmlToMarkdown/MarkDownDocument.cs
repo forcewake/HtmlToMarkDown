@@ -69,7 +69,7 @@ namespace BFound.HtmlToMarkdown
         private static MarkDownNode TextToMarkDown(HtmlAgilityPack.HtmlNode htmlNode, MarkDownNode markdownNode)
         {
             var text = System.Text.RegularExpressions.Regex.Replace(htmlNode.InnerText, "\\s+", " ");
-            return markdownNode.Append(new TextMarkDownNode { Text = WebUtility.HtmlDecode(text) });
+            return markdownNode.Append(new TextMarkDownNode { Text = WebUtility.HtmlDecode(text.Trim()) });
         }
 
         private static void HtmlNodeToMarkDownNode(HtmlAgilityPack.HtmlNode htmlNode, MarkDownNode markdownNode, Dictionary<string, Func<HtmlAgilityPack.HtmlNode, MarkDownNode, MarkDownNode>> elementConverters)
