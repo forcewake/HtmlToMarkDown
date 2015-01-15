@@ -17,7 +17,7 @@ namespace BFound.HtmlToMarkdown
 
         public override string ToString()
         {
-            return new string('#', _level) + " " + base.ToString().TrimStart() + NewLine() + NewLine();
+            return NewLine() + new string('#', _level) + " " + base.ToString().TrimStart() + NewLine() + NewLine();
         }
     }
 }
