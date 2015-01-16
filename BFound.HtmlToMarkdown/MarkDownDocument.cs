@@ -36,6 +36,14 @@ namespace BFound.HtmlToMarkdown
                 {"li", (htmlNode, markdownNode) => markdownNode.Append(new ListItemMarkDownNode())},
                 {"style", (htmlNode, markdownNode) => markdownNode.Append(new EmptyMarkdownNode())},
                 {"script", (htmlNode, markdownNode) => markdownNode.Append(new EmptyMarkdownNode())},
+                {"pre", (htmlNode, markdownNode) => markdownNode.Append(new PreMarkdownNode())},
+                {"code", (htmlNode, markdownNode) =>
+                    {
+                        var parentNodeName = htmlNode.ParentNode.Name;
+                        var code = WebUtility.HtmlDecode(htmlNode.InnerText);
+                        MarkDownNode node = markdownNode.Append(parentNodeName.ToLowerInvariant().Equals("pre") ? new CodeMarkdownNode(code) : new InlineCodeMarkdownNode(code));
+                        return node;
+                    } },
                 {"#text", TextToMarkDown},
             };
         }
