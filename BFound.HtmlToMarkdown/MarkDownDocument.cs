@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace BFound.HtmlToMarkdown
 {
+    using BFound.HtmlToMarkdown.Extensions;
+
     public static class MarkDownDocument
     {
         private static Dictionary<string, Func<HtmlAgilityPack.HtmlNode, MarkDownNode, MarkDownNode>> ElementConverters;
@@ -44,6 +46,7 @@ namespace BFound.HtmlToMarkdown
                         MarkDownNode node = markdownNode.Append(parentNodeName.ToLowerInvariant().Equals("pre") ? new CodeMarkdownNode(code) : new InlineCodeMarkdownNode(code));
                         return node;
                     } },
+                {"table", (htmlNode, markdownNode) => markdownNode.Append(new TableMarkdownNode(htmlNode.ExtractTable()))},
                 {"#text", TextToMarkDown},
             };
         }

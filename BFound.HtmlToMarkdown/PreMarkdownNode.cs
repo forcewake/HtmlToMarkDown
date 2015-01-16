@@ -4,7 +4,7 @@ namespace BFound.HtmlToMarkdown
     {
         public override string ToString()
         {
-            var line = this.NewLine() + "```" + this.NewLine() + base.ToString() + this.NewLine() + "```" + this.NewLine();
+            var line = this.NewLine() + "```" + this.NewLine() + base.ToString() + "```" + this.NewLine();
             return line;
         }
     }
