@@ -11,6 +11,7 @@ namespace BFound.HtmlToMarkdown
         public MarkDownNode()
         {
             ChildNodes = new List<MarkDownNode>();
+            HasChildNodes = true;
         }
 
         public MarkDownNode Parent { get; set; }
@@ -38,5 +39,6 @@ namespace BFound.HtmlToMarkdown
             return string.Join("", ChildNodes);
         }
 
+        public bool HasChildNodes { get; set; }
     }
 }

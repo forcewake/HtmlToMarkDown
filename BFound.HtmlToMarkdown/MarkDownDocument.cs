@@ -9,13 +9,15 @@ namespace BFound.HtmlToMarkdown
 {
     using BFound.HtmlToMarkdown.Extensions;
 
+    using HtmlAgilityPack;
+
     public static class MarkDownDocument
     {
-        private static Dictionary<string, Func<HtmlAgilityPack.HtmlNode, MarkDownNode, MarkDownNode>> ElementConverters;
+        private static Dictionary<string, Func<HtmlNode, MarkDownNode, MarkDownNode>> ElementConverters;
 
         static MarkDownDocument()
         {
-            ElementConverters = new Dictionary<string,Func<HtmlAgilityPack.HtmlNode,MarkDownNode,MarkDownNode>>{
+            ElementConverters = new Dictionary<string,Func<HtmlNode,MarkDownNode,MarkDownNode>>{
                 {"p", (htmlNode, markdownNode) => markdownNode.Append(new ParagraphMarkDownNode())},
                 {"b", (htmlNode, markdownNode) => markdownNode.Append(new BoldMarkDownNode())},
                 {"strong", (htmlNode, markdownNode) => markdownNode.Append(new BoldMarkDownNode())},
@@ -44,6 +46,7 @@ namespace BFound.HtmlToMarkdown
                         var parentNodeName = htmlNode.ParentNode.Name;
                         var code = WebUtility.HtmlDecode(htmlNode.InnerText);
                         MarkDownNode node = markdownNode.Append(parentNodeName.ToLowerInvariant().Equals("pre") ? new CodeMarkdownNode(code) : new InlineCodeMarkdownNode(code));
+                        node.HasChildNodes = false;
                         return node;
                     } },
                 {"table", (htmlNode, markdownNode) => markdownNode.Append(new TableMarkdownNode(htmlNode.ExtractTable()))},
@@ -56,7 +59,7 @@ namespace BFound.HtmlToMarkdown
             return FromHtml(html, null);
         }
 
-        public static string FromHtml(string html, Dictionary<string, Func<HtmlAgilityPack.HtmlNode, MarkDownNode, MarkDownNode>> customElementConverters)
+        public static string FromHtml(string html, Dictionary<string, Func<HtmlNode, MarkDownNode, MarkDownNode>> customElementConverters)
         {
             var elementConverters = ElementConverters;
             if (customElementConverters != null)
@@ -67,7 +70,7 @@ namespace BFound.HtmlToMarkdown
                 }
             }
 
-            var htmlDocument = new HtmlAgilityPack.HtmlDocument();
+            var htmlDocument = new HtmlDocument();
             htmlDocument.LoadHtml(html);
             var body = htmlDocument.DocumentNode.SelectSingleNode("//body");
 
@@ -77,27 +80,35 @@ namespace BFound.HtmlToMarkdown
             return mardownDocumentNode.ToString();
         }
 
-        private static MarkDownNode TextToMarkDown(HtmlAgilityPack.HtmlNode htmlNode, MarkDownNode markdownNode)
+        private static MarkDownNode TextToMarkDown(HtmlNode htmlNode, MarkDownNode markdownNode)
         {
             var text = System.Text.RegularExpressions.Regex.Replace(htmlNode.InnerText, "\\s+", " ");
-            return markdownNode.Append(new TextMarkDownNode { Text = WebUtility.HtmlDecode(text.Trim()) });
+            return markdownNode.Append(new TextMarkDownNode { Text = WebUtility.HtmlDecode(text) });
         }
 
-        private static void HtmlNodeToMarkDownNode(HtmlAgilityPack.HtmlNode htmlNode, MarkDownNode markdownNode, Dictionary<string, Func<HtmlAgilityPack.HtmlNode, MarkDownNode, MarkDownNode>> elementConverters)
+        private static void HtmlNodeToMarkDownNode(
+            HtmlNode htmlNode,
+            MarkDownNode markdownNode,
+            Dictionary<string, Func<HtmlNode, MarkDownNode, MarkDownNode>> elementConverters)
         {
-            Func<HtmlAgilityPack.HtmlNode, MarkDownNode, MarkDownNode> elementConverter;
+            Func<HtmlNode, MarkDownNode, MarkDownNode> elementConverter;
+            
             if (elementConverters.TryGetValue(htmlNode.Name.ToLowerInvariant(), out elementConverter))
             {
                 markdownNode = elementConverter(htmlNode, markdownNode);
             }
-            
-            foreach (var childNode in htmlNode.ChildNodes)
+
+            if (markdownNode.HasChildNodes)
             {
-                HtmlNodeToMarkDownNode(childNode, markdownNode, elementConverters);
+                foreach (var childNode in htmlNode.ChildNodes)
+                {
+                    HtmlNodeToMarkDownNode(childNode, markdownNode, elementConverters);
+                }
             }
         }
 
-        private static string AttrValue(HtmlAgilityPack.HtmlNode htmlNode, string name)
+
+        private static string AttrValue(HtmlNode htmlNode, string name)
         {
             var attr = htmlNode.Attributes[name];
             return attr != null
